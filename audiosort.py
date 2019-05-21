@@ -1,104 +1,41 @@
 #!/usr/bin/python
-import os, sys, getopt, mutagen
-from shutil import copy2
-
-def unkownDir(file, move, output_dir):
-    if (not os.path.isdir(os.path.join(output_dir, '###Unknown_Files###'))):
-        os.mkdir(os.path.join(output_dir, '###Unknown_Files###'))
-        if (verbose):
-            print('Created ###Unkown_Files### directory')
-    if (move):
-        os.rename(file, os.path.join(output_dir, '###Unknown_Files###', os.path.basename(file)))
-        if (verbose):
-            print('Moved', os.path.basename(file), 'to ###Unkown_Files###')
-    else:
-        copy2(file, os.path.join(output_dir, '###Unknown_Files###', os.path.basename(file)))
-        if (verbose):
-            print('Copied', os.path.basename(file), 'to ###Unkown_Files###')
-    return True
+import os, sys, getopt
+from tinytag import TinyTag
+from shutil import copy2, rmtree
+from shutil import move as mv
 
 
-def unkownArtistDir(file, move, output_dir, album):
-    if (not os.path.isdir(os.path.join(output_dir, '###Unkown_Artist###', album))):
-        os.makedirs(os.path.join(output_dir, '###Unkown_Artist###', album))
-        if (verbose):
-            print('Created ###Unkown_Artist### directory')
-    if (move):
-        os.rename(file, os.path.join(output_dir, '###Unkown_Artist###', album, os.path.basename(file)))
-        if (verbose):
-            print('Moved', os.path.basename(file), 'to', os.path.join(os.path.basename(
-                file), output_dir, '###Unkown_Artist###', album, os.path.basename(file)))
-    else:
-        copy2(file, os.path.join(os.path.basename(
-            file), output_dir, '###Unkown_Artist###', album, os.path.basename(file)))
-        if (verbose):
-            print('Copied', os.path.basename(file), 'to', os.path.join(os.path.basename(
-                file), output_dir, '###Unkown_Artist###', album, os.path.basename(file)))
-    return True
-
-
-def music_move(file, output_dir, album, artist, date, genre, use_date, use_genre):
+def music(file, output_dir, album, artist, date, genre, use_date, use_genre, move):
     if (use_genre and use_date):
-        if (not os.path.isdir(os.path.join(output_dir, genre, artist, date, album))):
-            os.makedirs(os.path.join(output_dir, genre, artist, date, album))
-        os.rename(file, os.path.join(output_dir, genre, artist, date, album, os.path.basename(file)))
-        if (verbose):
-            print('Moved', os.path.basename(file), 'to', os.path.join(output_dir, genre, artist, date, album, os.path.basename(file)))
+        path = os.path.join(output_dir, genre, artist, date, album)
     elif (use_genre):
-        if (not os.path.isdir(os.path.join(output_dir, genre, artist, album))):
-            os.makedirs(os.path.join(output_dir, genre, artist, album))
-        os.rename(file, os.path.join(output_dir, genre, artist, album, os.path.basename(file)))
-        if (verbose):
-            print('Moved', os.path.basename(file), 'to', os.path.join(output_dir, genre, artist, album, os.path.basename(file)))
+        path = os.path.join(output_dir, genre, artist, album)
     elif (use_date):
-        if (not os.path.isdir(os.path.join(output_dir, artist, date, album))):
-            os.makedirs(os.path.join(output_dir, artist, date, album))
-        os.rename(file, os.path.join(output_dir, artist, date, album, os.path.basename(file)))
-        if (verbose):
-            print('Moved', os.path.basename(file), 'to', os.path.join(output_dir, artist, date, album, os.path.basename(file)))
+        path = os.path.join(output_dir, artist, date, album)
     else:
-        if (not os.path.isdir(os.path.join(output_dir, artist, album))):
-            os.makedirs(os.path.join(output_dir, artist, album))
-        os.rename(file, os.path.join(output_dir, artist, album, os.path.basename(file)))
-        if (verbose):
-            print('Moved', os.path.basename(file), 'to', os.path.join(output_dir, artist, album, os.path.basename(file)))
-    return True
-
-
-def music_copy(file, output_dir, album, artist, date, genre, use_date, use_genre):
-    if (use_genre and use_date):
-        if (not os.path.isdir(os.path.join(output_dir, genre, artist, date, album))):
-            os.makedirs(os.path.join(output_dir, genre, artist, date, album))
-        copy2(file, os.path.join(output_dir, genre, artist, date, album, os.path.basename(file)))
-        if (verbose):
-            print('Copied', os.path.basename(file), 'to', os.path.join(output_dir, genre, artist, date, album, os.path.basename(file)))
-    elif (use_genre):
-        if (not os.path.isdir(os.path.join(output_dir, genre, artist, album))):
-            os.makedirs(os.path.join(output_dir, genre, artist, album))
-        copy2(file, os.path.join(output_dir, genre, artist, album, os.path.basename(file)))
-        if (verbose):
-            print('Copied', os.path.basename(file), 'to', os.path.join(output_dir, genre, artist, album, os.path.basename(file)))
-    elif (use_date):
-        if (not os.path.isdir(os.path.join(output_dir, artist, date, album))):
-            os.makedirs(os.path.join(output_dir, artist, date, album))
-        copy2(file, os.path.join(output_dir, artist, date, album, os.path.basename(file)))
-        if (verbose):
-            print('Copied', os.path.basename(file), 'to', os.path.join(output_dir, artist, date, album, os.path.basename(file)))
+        path = os.path.join(output_dir, artist, album)
+    if (not os.path.isdir(path)):
+        os.makedirs(path)
+    file_path = os.path.join(path, os.path.basename(file))
+    if (os.path.isfile(file_path)):
+        return False
+    if (move):
+        mv(file, file_path)
+        m_or_c = 'Moved'
     else:
-        if (not os.path.isdir(os.path.join(output_dir, artist, album))):
-            os.makedirs(os.path.join(output_dir, artist, album))
-        copy2(file, os.path.join(output_dir, artist, album, os.path.basename(file)))
-        if (verbose):
-            print('Copied', os.path.basename(file), 'to', os.path.join(output_dir, artist, album, os.path.basename(file)))
+        copy2(file, file_path)
+        m_or_c = 'Copied'
+    if (verbose):
+        print(m_or_c, os.path.basename(file), 'to', file_path)
     return True
 
 
 def main(argv):
     global verbose
-    input_dir, output_dir = '', ''
-    use_genre, use_date, verbose, move, copy_or_move_used = False, False, False, True, False
+    input_dir, output_dir = None, None
+    use_genre, use_date, verbose, move, copy_or_move_used, use_file, use_nuke = False, False, False, True, False, False, False
     try:
-        opts, args = getopt.getopt(argv, "cmdhgvi:o:", ["help", "genre", "copy", "move", "date", "verbose", "input=", "output="])
+        opts, args = getopt.getopt(argv, "cmdfnhgvi:o:", ["help", "genre", "copy", "move", "date", "verbose", "file", "nuke", "input=", "output="])
     except getopt.GetoptError:
         print('Invalid syntax. Use -h or --help')
         sys.exit(2)
@@ -136,9 +73,20 @@ def main(argv):
             use_date = True
             if (verbose):
                 print('Using -d or --date')
+        elif opt in ('-f', '--file'):
+            use_file = True
+            if (verbose):
+                print('Using -f or --file')
+        elif opt in ('-n', '--nuke'):
+            use_nuke = True
+            if (verbose):
+                print('Using -n or --nuke')
         elif opt in ("-i", "--input"):
             input_dir = os.path.abspath(os.path.normpath(arg))
-            if (not os.path.isdir(input_dir)):
+            if (os.path.isfile(input_dir)):
+                print('Error, the input path is pointing to a file')
+                sys.exit(2)
+            elif (not os.path.isdir(input_dir)):
                 print('Error, the input path isn\'t real.')
                 sys.exit(2)
         elif opt in ("-o", "--output"):
@@ -149,7 +97,7 @@ def main(argv):
                     os.makedirs(output_dir)
                 else:
                     sys.exit(2)
-    if (input_dir == '' or output_dir == ''):
+    if (input_dir == None or output_dir == None):
         print('Invalid syntax. You at least need to use -i and -o or --input and --output')
         sys.exit(2)
     if (verbose):
@@ -159,39 +107,58 @@ def main(argv):
         for entry in files:
             file, path = entry, root
             os.chdir(path)
-            album, artist, date, genre = '', '', '', ''
-            f = mutagen.File(file)
-            if (f == None):
-                continue #TODO Have to take care of other files
+            album, artist, date, genre = '###UNKNOWN_ALBUM###', '###UNKNOWN_ARTIST###', '###UNKNOWN_DATE###', '###UNKNOWN_GENRE###'
+            if (verbose):
+                print('--------------------')
+            if (not TinyTag.is_supported(file)):
+                if (use_file):
+                    dir_path = os.path.join(output_dir, '###OTHER_FILES###')
+                    file_path = os.path.join(dir_path, file)
+                    if (not os.path.isdir(dir_path)):
+                        os.makedirs(dir_path)
+                    if (not os.path.isfile(file_path)):
+                        m_or_c = ''
+                        if (move):
+                            mv(os.path.join(root, file), file_path)
+                            m_or_c = 'Moved'
+                        else:
+                            copy2(os.path.join(root, file), file_path)
+                            m_or_c = 'Copied'
+                        if (verbose):
+                            print(m_or_c, os.path.basename(file), 'to', file_path)
+                    else:
+                        print('File skipped because it\'s already in the library')
+                else:
+                    if (verbose):
+                        print('File skipped because it\'s not an audio file')
+                if (verbose):
+                    print('--------------------\n')
+                continue
+            f = TinyTag.get(file)
             if (verbose):
                 print('file:', file)
-            if (not 'album' in f):
-                unkownDir(entry, move, output_dir)
-                continue
-            elif ((not 'artist' in f) and (not 'albumartist' in f)):
-                album = f['album'][0]
-                if (verbose):
-                    print('[album]:', album)
-                unkownArtistDir(entry, move, output_dir, album)
-                continue
-            elif (not 'albumartist' in f):
-                album = f['album'][0]
-                artist = f['artist'][0]
-            else:
-                album = f['album'][0]
-                artist = f['albumartist'][0]
+            if (not f.album == None):
+                album = f.album
+            if (not f.albumartist == None):
+                album = f.albumartist
+            elif (not f.artist == None):
+                artist = f.artist
             if (verbose):
                     print('[album]:', album, '\n[artist]:', artist)
-            if ('date' in f):
-                date = f['date'][0]
-            if ('genre' in f):
-                genre = f['genre'][0]
+            if (not f.year == None):
+                date = f.year
+            if (not f.genre == None):
+                genre = f.genre
             if (verbose):
                     print('[date]:', date, '\n[genre]:', genre)
-            if (move):
-                music_move(entry, output_dir, album, artist, date, genre, use_date, use_genre)
-            else:
-                music_copy(entry, output_dir, album, artist, date, genre, use_date, use_genre)        
+            if ((not music(entry, output_dir, album, artist, date, genre, use_date, use_genre, move)) and verbose):
+                print('File skipped because it\'s already in the library')
+            if (verbose):
+                print('--------------------\n')
+    if (use_nuke):
+        rmtree(input_dir)
+        if (verbose):
+            print('Nuked the input directory')
     sys.exit(0)
 
 
