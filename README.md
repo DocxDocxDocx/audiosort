@@ -32,5 +32,5 @@ Options:
 	-v or --verbose:
 		Shows information for everything the program does
 	-y or --yes:
-		Automaticly respond yes to any query
+		Automatically respond yes to any query
 ```
