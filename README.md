@@ -31,4 +31,6 @@ Options:
 		Indicates the root directory of the audio library output
 	-v or --verbose:
 		Shows information for everything the program does
+	-y or --yes:
+		Automaticly respond yes to any query
 ```
