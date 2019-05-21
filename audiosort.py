@@ -44,9 +44,11 @@ def music(file, output_dir, album, artist, date, genre, use_date, use_genre, mov
         path = os.path.join(output_dir, artist, date, album)
     else:
         path = os.path.join(output_dir, artist, album)
+    os.path.normpath(path)
     if (not os.path.isdir(path)):
         os.makedirs(path)
     file_path = os.path.join(path, os.path.basename(file))
+    os.path.normpath(file_path)
     if (os.path.isfile(file_path)):
         return False
     if (move):
@@ -63,19 +65,22 @@ def music(file, output_dir, album, artist, date, genre, use_date, use_genre, mov
 def main(argv):
     global verbose
     input_dir, output_dir = None, None
-    use_genre, use_date, verbose, move, copy_or_move_used, use_file, use_nuke = False, False, False, True, False, False, False
+    use_genre, use_date, verbose, move, copy_or_move_used, use_file, use_nuke, auto_yes = False, False, False, True, False, False, False, False
     try:
-        opts, args = getopt.getopt(argv, "cmdfnhgvi:o:", ["help", "genre", "copy", "move", "date", "verbose", "file", "nuke", "input=", "output="])
+        opts, args = getopt.getopt(argv, "cmdfnhgyvi:o:", ["yes", "help", "genre", "copy", "move", "date", "verbose", "file", "nuke", "input=", "output="])
     except getopt.GetoptError:
         print('Invalid syntax. Use -h or --help')
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            print('\naudiosort -i [unsorted library path] -o [output path]\n\nOptions:\n\t-c or --copy:\n\t\tCopies the files from [input] to [output]\n\t-d or --date:\n\t\tCreate and sort by date\n\t-f or --file\n\t\tTake care of non-audio files\n\t-g or --genre:\n\t\tCreate and sort by genre\n\t-h or --help:\n\t\tShows this message\n\t-i or --input:\n\t\tNeeds a path !\n\t\tIndicates the root directory of the audio library to sort\n\t-m or --move:\n\t\tUsed by default\n\t\tMoves the file from [input] to [output]\n\t-n or --nuke:\n\t\tRemoves the input directory after sorting it\n\t-o or --output:\n\t\tNeeds a path !\n\t\tIndicates the root directory of the audio library output\n\t-v or --verbose:\n\t\tShows information for everything the program does')
+            print('Audiosort is a command line utility to sort your music library\n\nMinimum usage of audiosort:\naudiosort -i [unsorted library path] -o [output path]\n\nOptions:\n\t-c or --copy:\n\t\tCopies the files from [input] to [output]\n\t-d or --date:\n\t\tCreate and sort by date\n\t-f or --file\n\t\tTake care of non-audio files\n\t-g or --genre:\n\t\tCreate and sort by genre\n\t-h or --help:\n\t\tShows this message\n\t-i or --input:\n\t\tNeeds a path !\n\t\tIndicates the root directory of the audio library to sort\n\t-m or --move:\n\t\tUsed by default\n\t\tMoves the file from [input] to [output]\n\t-n or --nuke:\n\t\tRemoves the input directory after sorting it\n\t-o or --output:\n\t\tNeeds a path !\n\t\tIndicates the root directory of the audio library output\n\t-v or --verbose:\n\t\tShows information for everything the program does\n\t-y or --yes:\n\t\tAutomaticly respond yes to any query')
             sys.exit(0)
         elif opt in ('-v', '--verbose'):
             verbose = True
             print('Using -v or --verbose')
+        elif opt in ('-y', '--yes'):
+            auto_yes = True
+            print('Using -y or --yes')
     for opt, arg in opts:
         if opt in ("-g", "--genre"):
             use_genre = True
@@ -108,9 +113,17 @@ def main(argv):
             if (verbose):
                 print('Using -f or --file')
         elif opt in ('-n', '--nuke'):
-            use_nuke = True
-            if (verbose):
-                print('Using -n or --nuke')
+            really_nuke = input('Are you sure you want to nuke the input directory? (Y/n)')
+            if (auto_yes):
+                really_nuke = 'Y'
+            if (really_nuke == 'Y'):
+                use_nuke = True
+                if (verbose):
+                    print('Using -n or --nuke')
+            else:
+                use_nuke = False
+                if (verbose):
+                    print('Not using -n or --nuke then')
         elif opt in ("-i", "--input"):
             input_dir = os.path.abspath(os.path.normpath(arg))
             if (os.path.isfile(input_dir)):
@@ -123,6 +136,8 @@ def main(argv):
             output_dir = os.path.abspath(os.path.normpath(arg))
             if (not os.path.isdir(output_dir)):
                 create_output_dir = input('The output directory isn\'t real. Do you want to create it? (Y/n)')
+                if (auto_yes):
+                    create_output_dir = 'Y'
                 if (create_output_dir == 'Y'):
                     os.makedirs(output_dir)
                 else:
@@ -144,6 +159,8 @@ def main(argv):
                 if (use_file):
                     dir_path = os.path.join(output_dir, '###OTHER_FILES###')
                     file_path = os.path.join(dir_path, file)
+                    os.path.normpath(dir_path)
+                    os.path.normpath(file_path)
                     if (not os.path.isdir(dir_path)):
                         os.makedirs(dir_path)
                     if (not os.path.isfile(file_path)):
