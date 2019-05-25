@@ -91,9 +91,16 @@ def main(argv):
             if (verbose):
                 print('Using -g or --genre')
         elif opt in ("-t", "--overwrite", "thwomp"):
-            use_over = True
-            if (verbose):
-                print('Using -t or --overwrite or -- thwomp')
+            really_over = input('Are you sure you want to overwrite files ?(Y/n)')
+            if (auto_yes):
+                really_over = 'Y'
+            if (really_over == 'Y'):
+                use_over = True
+                if (verbose):
+                    print('Using -t or --overwrite or --thwomp')
+            else:
+                if (verbose):
+                    print('Not Using -t or --overwrite or --thwomp then')
         elif opt in ('-c', '--copy'):
             if (not copy_or_move_used):
                 move = False
