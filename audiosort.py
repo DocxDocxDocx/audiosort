@@ -35,7 +35,7 @@ from shutil import copy2, rmtree
 from shutil import move as mv
 
 
-def music(file, output_dir, album, artist, date, genre, use_date, use_genre, move):
+def music(file, output_dir, album, artist, date, genre, use_date, use_genre, move, use_over):
     if (use_genre and use_date):
         path = os.path.join(output_dir, genre, artist, date, album)
     elif (use_genre):
@@ -49,7 +49,7 @@ def music(file, output_dir, album, artist, date, genre, use_date, use_genre, mov
         os.makedirs(path)
     file_path = os.path.join(path, os.path.basename(file))
     os.path.normpath(file_path)
-    if (os.path.isfile(file_path)):
+    if (os.path.isfile(file_path) or use_over):
         return False
     if (move):
         mv(file, file_path)
@@ -64,16 +64,20 @@ def music(file, output_dir, album, artist, date, genre, use_date, use_genre, mov
 
 def main(argv):
     global verbose
+    if sys.platform.startswith('freebsd') or sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+        illegal_chars = ['.','/']
+    elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
+        illegal_chars = ['<','>',':','\"','/','\\','|','?','*','.']
     input_dir, output_dir = None, None
-    use_genre, use_date, verbose, move, copy_or_move_used, use_file, use_nuke, auto_yes = False, False, False, True, False, False, False, False
+    use_genre, use_date, verbose, move, copy_or_move_used, use_file, use_nuke, auto_yes, use_over = False, False, False, True, False, False, False, False, False
     try:
-        opts, args = getopt.getopt(argv, "cmdfnhgyvi:o:", ["yes", "help", "genre", "copy", "move", "date", "verbose", "file", "nuke", "input=", "output="])
+        opts, args = getopt.getopt(argv, "cmdtfnhgyvi:o:", ["yes", "help", "genre", "copy", "move", "date", "verbose", "file", "nuke", "thwomp", "overwrite", "input=", "output="])
     except getopt.GetoptError:
         print('Invalid syntax. Use -h or --help')
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            print('Audiosort is a command line utility to sort your music library\n\nMinimum usage of audiosort:\naudiosort -i [unsorted library path] -o [output path]\n\nOptions:\n\t-c or --copy:\n\t\tCopies the files from [input] to [output]\n\t-d or --date:\n\t\tCreate and sort by date\n\t-f or --file\n\t\tTake care of non-audio files\n\t-g or --genre:\n\t\tCreate and sort by genre\n\t-h or --help:\n\t\tShows this message\n\t-i or --input:\n\t\tNeeds a path !\n\t\tIndicates the root directory of the audio library to sort\n\t-m or --move:\n\t\tUsed by default\n\t\tMoves the file from [input] to [output]\n\t-n or --nuke:\n\t\tRemoves the input directory after sorting it\n\t-o or --output:\n\t\tNeeds a path !\n\t\tIndicates the root directory of the audio library output\n\t-v or --verbose:\n\t\tShows information for everything the program does\n\t-y or --yes:\n\t\tAutomatically respond yes to any query')
+            print('Audiosort is a command line utility to sort your music library\n\nMinimum usage of audiosort:\naudiosort -i [unsorted library path] -o [output path]\n\nIf one of the tags contains an illegal character for your OS it will be replaced by a "#"\n\nOptions:\n\t-c or --copy:\n\t\tCopies the files from [input] to [output]\n\t-d or --date:\n\t\tCreate and sort by date\n\t-f or --file\n\t\tTake care of non-audio files\n\t-g or --genre:\n\t\tCreate and sort by genre\n\t-h or --help:\n\t\tShows this message\n\t-i or --input:\n\t\tNeeds a path !\n\t\tIndicates the root directory of the audio library to sort\n\t-m or --move:\n\t\tUsed by default\n\t\tMoves the file from [input] to [output]\n\t-n or --nuke:\n\t\tRemoves the input directory after sorting it\n\t-t or --overwrite or --thwomp:\n\t\tIf a file exist already then it\'s overwritten\n\t-o or --output:\n\t\tNeeds a path !\n\t\tIndicates the root directory of the audio library output\n\t-v or --verbose:\n\t\tShows information for everything the program does\n\t-y or --yes:\n\t\tAutomatically respond yes to any query')
             sys.exit(0)
         elif opt in ('-v', '--verbose'):
             verbose = True
@@ -86,6 +90,10 @@ def main(argv):
             use_genre = True
             if (verbose):
                 print('Using -g or --genre')
+        elif opt in ("-t", "--overwrite", "thwomp"):
+            use_over = True
+            if (verbose):
+                print('Using -t or --overwrite or -- thwomp')
         elif opt in ('-c', '--copy'):
             if (not copy_or_move_used):
                 move = False
@@ -163,7 +171,7 @@ def main(argv):
                     os.path.normpath(file_path)
                     if (not os.path.isdir(dir_path)):
                         os.makedirs(dir_path)
-                    if (not os.path.isfile(file_path)):
+                    if (not os.path.isfile(file_path) or use_over):
                         m_or_c = ''
                         if (move):
                             mv(os.path.join(root, file), file_path)
@@ -198,7 +206,12 @@ def main(argv):
                 genre = f.genre
             if (verbose):
                     print('[date]:', date, '\n[genre]:', genre)
-            if ((not music(entry, output_dir, album, artist, date, genre, use_date, use_genre, move)) and verbose):
+            for c in illegal_chars:
+                album.replace(c, '#')
+                artist.replace(c, '#')
+                date.replace(c, '#')
+                genre.replace(c, '#')
+            if ((not music(entry, output_dir, album, artist, date, genre, use_date, use_genre, move, use_over)) and verbose):
                 print('File skipped because it\'s already in the library')
             if (verbose):
                 print('--------------------\n')
