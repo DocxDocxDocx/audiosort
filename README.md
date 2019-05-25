@@ -5,7 +5,10 @@ Using TinyTag for metadata reading. Check it out! https://github.com/devsnd/tiny
 
 ### Usage:
 ```
+Minimum usage of audiosort:
 audiosort -i [unsorted library path] -o [output path]
+
+If one of the tags contains an illegal character for your OS it will be replaced by a "#"
 
 Options:
 	-c or --copy:
@@ -26,6 +29,8 @@ Options:
 		Moves the file from [input] to [output]
 	-n or --nuke:
 		Removes the input directory after sorting it
+	-t or --overwrite or --thwomp:
+		If a file exist already then it's overwritten
 	-o or --output:
 		Needs a path !
 		Indicates the root directory of the audio library output
