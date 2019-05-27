@@ -31,25 +31,30 @@
 
 import os, sys, getopt
 from tinytag import TinyTag
+from string import Template
 from shutil import copy2, rmtree
 from shutil import move as mv
 
 
-def music(file, output_dir, album, artist, date, genre, use_date, use_genre, move, use_over):
-    if (use_genre and use_date):
-        path = os.path.join(output_dir, genre, artist, date, album)
-    elif (use_genre):
-        path = os.path.join(output_dir, genre, artist, album)
-    elif (use_date):
-        path = os.path.join(output_dir, artist, date, album)
-    else:
-        path = os.path.join(output_dir, artist, album)
+class TemplateP(Template):
+        delimiter = '%'
+
+
+def music(file, output_dir, filetags, move, use_over, filename):
+    path = TemplateP(output_dir).safe_substitute(filetags)
     os.path.normpath(path)
+    os.path.abspath(path)
     if (not os.path.isdir(path)):
         os.makedirs(path)
-    file_path = os.path.join(path, os.path.basename(file))
+    if (not filename == os.path.basename(file)):
+        for e in ['.mp3','.oga','.ogg','.opus','.wav','.flac','.wma','.m4b','.m4a','.mp4']:
+            if os.path.basename(file).lower().endswith(e):
+                ext = e
+                break
+        filename = TemplateP(filename).safe_substitute(filetags) + ext
+    file_path = os.path.join(path, filename)
     os.path.normpath(file_path)
-    if (os.path.isfile(file_path) or use_over):
+    if (os.path.isfile(file_path) and (not use_over)):
         return False
     if (move):
         mv(file, file_path)
@@ -68,10 +73,10 @@ def main(argv):
         illegal_chars = ['.','/']
     elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
         illegal_chars = ['<','>',':','\"','/','\\','|','?','*','.']
-    input_dir, output_dir = None, None
-    use_genre, use_date, verbose, move, copy_or_move_used, use_file, use_nuke, auto_yes, use_over = False, False, False, True, False, False, False, False, False
+    input_dir, output_dir, filename = None, None, None
+    verbose, move, copy_or_move_used, use_file, use_nuke, auto_yes, use_over, use_filename = False, True, False, False, False, False, False, False
     try:
-        opts, args = getopt.getopt(argv, "cmdtfnhgyvi:o:", ["yes", "help", "genre", "copy", "move", "date", "verbose", "file", "nuke", "thwomp", "overwrite", "input=", "output="])
+        opts, args = getopt.getopt(argv, "cmtfhyvn:i:o:", ["yes", "help", "copy", "move", "verbose", "file", "nuke", "thwomp", "overwrite", "filename=", "input=", "output="])
     except getopt.GetoptError:
         print('Invalid syntax. Use -h or --help')
         sys.exit(2)
@@ -86,11 +91,7 @@ def main(argv):
             auto_yes = True
             print('Using -y or --yes')
     for opt, arg in opts:
-        if opt in ("-g", "--genre"):
-            use_genre = True
-            if (verbose):
-                print('Using -g or --genre')
-        elif opt in ("-t", "--overwrite", "thwomp"):
+        if opt in ("-t", "--overwrite", "thwomp"):
             really_over = input('Are you sure you want to overwrite files ?(Y/n)')
             if (auto_yes):
                 really_over = 'Y'
@@ -119,22 +120,23 @@ def main(argv):
             else:
                 print('Both -c and -m or --copy and --move are used. Using --move by default')
                 move = True
-        elif opt in ('-d', '--date'):
-            use_date = True
-            if (verbose):
-                print('Using -d or --date')
         elif opt in ('-f', '--file'):
             use_file = True
             if (verbose):
                 print('Using -f or --file')
-        elif opt in ('-n', '--nuke'):
+        elif opt in ('-n', '--filename'):
+            filename = arg
+            use_filename = True
+            if (verbose):
+                print('Using -n or --filename')
+        elif (opt == '--nuke'):
             really_nuke = input('Are you sure you want to nuke the input directory? (Y/n)')
             if (auto_yes):
                 really_nuke = 'Y'
             if (really_nuke == 'Y'):
                 use_nuke = True
                 if (verbose):
-                    print('Using -n or --nuke')
+                    print('Using --nuke')
             else:
                 use_nuke = False
                 if (verbose):
@@ -148,15 +150,7 @@ def main(argv):
                 print('Error, the input path isn\'t real.')
                 sys.exit(2)
         elif opt in ("-o", "--output"):
-            output_dir = os.path.abspath(os.path.normpath(arg))
-            if (not os.path.isdir(output_dir)):
-                create_output_dir = input('The output directory isn\'t real. Do you want to create it? (Y/n)')
-                if (auto_yes):
-                    create_output_dir = 'Y'
-                if (create_output_dir == 'Y'):
-                    os.makedirs(output_dir)
-                else:
-                    sys.exit(2)
+            output_dir = os.path.abspath(arg)
     if (input_dir == None or output_dir == None):
         print('Invalid syntax. You at least need to use -i and -o or --input and --output')
         sys.exit(2)
@@ -167,12 +161,12 @@ def main(argv):
         for entry in files:
             file, path = entry, root
             os.chdir(path)
-            album, artist, date, genre = '###UNKNOWN_ALBUM###', '###UNKNOWN_ARTIST###', '###UNKNOWN_DATE###', '###UNKNOWN_GENRE###'
+            filetags = {'album':'###UNKNOWN_ALBUM##', 'albumartist': '###UNKNOWN_ALBUM_ARTIST###','realartist':'###UNKNOWN_ARTIST###', 'artist':'###UNKNOWN_ARTIST###' , 'audio_offset':'###UNKNOWN_AUDIO_OFFSET###' , 'bitrate':'###UNKNOWN_BITRATE###' , 'comment':'###UNKNOWN_COMMENT###' , 'composer':'###UNKNOWN_COMPOSER###' , 'disc':'###UNKNOWN_DISC###' , 'disc_total':'###UNKNOWN_DISC_TOTAL###' , 'duration':'###UNKNOWN_DURATION###' , 'filesize':'###UNKNOWN_FILESIZE###' , 'genre':'###UNKNOWN_GENRE###' , 'samplerate':'###UNKNOWN_SAMPLERATE###' , 'title':'###UNKNOWN_TITLE###' , 'track':'###UNKNOWN_TRACK###' , 'track_total':'###UNKNOWN_TRACK_TOTAL###', 'year':'###UNKNOWN_YEAR###'}
             if (verbose):
                 print('--------------------')
             if (not TinyTag.is_supported(file)):
                 if (use_file):
-                    dir_path = os.path.join(output_dir, '###OTHER_FILES###')
+                    dir_path = os.path.join('.', '###OTHER_FILES###')
                     file_path = os.path.join(dir_path, file)
                     os.path.normpath(dir_path)
                     os.path.normpath(file_path)
@@ -200,25 +194,51 @@ def main(argv):
             if (verbose):
                 print('file:', file)
             if (not f.album == None):
-                album = f.album
+                filetags['album'] = f.album
             if (not f.albumartist == None):
-                album = f.albumartist
-            elif (not f.artist == None):
-                artist = f.artist
-            if (verbose):
-                    print('[album]:', album, '\n[artist]:', artist)
+                filetags['artist'] = f.albumartist
+                filetags['albumartist'] = f.albumartist
+            if (not f.artist == None):
+                if (f.albumartist == None):
+                    filetags['artist'] = f.artist
+                filetags['realartist'] = f.artist
             if (not f.year == None):
-                date = f.year
+                filetags['year'] = str(f.year)
             if (not f.genre == None):
-                genre = f.genre
+                filetags['genre'] = f.genre
+            if (not f.audio_offset == None):
+                filetags['audio_offset'] = str(f.audio_offset)
+            if (not f.bitrate == None):
+                filetags['bitrate'] = str(f.bitrate)
+            if (not f.comment == None):
+                filetags['comment'] = f.comment
+            if (not f.composer == None):
+                filetags['composer'] = f.composer
+            if (not f.disc == None):
+                filetags['disc'] = f.disc
+            if (not f.disc_total == None):
+                filetags['disc_total'] = str(f.disc_total)
+            if (not f.duration == None):
+                filetags['duration'] = str(f.duration)
+            if (not f.filesize == None):
+                filetags['filesize'] = str(f.filesize)
+            if (not f.samplerate == None):
+                filetags['samplerate'] = str(f.samplerate)
+            if (not f.title == None):
+                filetags['title'] = f.title
+            if (not f.track == None):
+                filetags['track'] = str(f.track)
+            if (not f.track_total == None):
+                filetags['track_total'] = str(f.track_total)
             if (verbose):
-                    print('[date]:', date, '\n[genre]:', genre)
+                for x, y in filetags.items():
+                    print('[{0}]:{1}'.format(x,y))
             for c in illegal_chars:
-                album.replace(c, '#')
-                artist.replace(c, '#')
-                date.replace(c, '#')
-                genre.replace(c, '#')
-            if ((not music(entry, output_dir, album, artist, date, genre, use_date, use_genre, move, use_over)) and verbose):
+                for i in filetags.values():
+                    i.replace(c, '#')
+            if (not use_filename):
+                filename = file
+            if ((not music(entry, output_dir, filetags, move, use_over, filename)) and verbose):
                 print('File skipped because it\'s already in the library')
             if (verbose):
                 print('--------------------\n')
