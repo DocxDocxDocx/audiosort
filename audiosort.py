@@ -76,7 +76,7 @@ def main(argv):
     input_dir, output_dir, filename = None, None, None
     verbose, move, copy_or_move_used, use_file, use_nuke, auto_yes, use_over, use_filename = False, True, False, False, False, False, False, False
     try:
-        opts, args = getopt.getopt(argv, "cmtfhyvn:i:o:", ["yes", "help", "copy", "move", "verbose", "file", "nuke", "thwomp", "overwrite", "filename=", "input=", "output="])
+        opts, args = getopt.getopt(argv, "cmthyvf:n:i:o:", ["yes", "help", "copy", "move", "verbose", "file=", "nuke", "thwomp", "overwrite", "filename=", "input=", "output="])
     except getopt.GetoptError:
         print('Invalid syntax. Use -h or --help')
         sys.exit(2)
@@ -122,6 +122,9 @@ def main(argv):
                 move = True
         elif opt in ('-f', '--file'):
             use_file = True
+            other_files_path = os.path.abspath(arg)
+            if (not os.path.isdir(other_files_path)):
+                os.makedirs(other_files_path)
             if (verbose):
                 print('Using -f or --file')
         elif opt in ('-n', '--filename'):
@@ -166,12 +169,8 @@ def main(argv):
                 print('--------------------')
             if (not TinyTag.is_supported(file)):
                 if (use_file):
-                    dir_path = os.path.join('.', '###OTHER_FILES###')
-                    file_path = os.path.join(dir_path, file)
-                    os.path.normpath(dir_path)
+                    file_path = os.path.join(other_files_path, file)
                     os.path.normpath(file_path)
-                    if (not os.path.isdir(dir_path)):
-                        os.makedirs(dir_path)
                     if (not os.path.isfile(file_path) or use_over):
                         m_or_c = ''
                         if (move):
