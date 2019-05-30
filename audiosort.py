@@ -1,33 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# audiosort - an audio-library sorter
-# Copyright (c) 2019 Docx
-#
-# Sources on github:
-# https://github.com/DocxDocxDocx/audiosort
-
-# MIT License
-
-# Copyright (c) 2019 Docx
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 
 import os, sys, getopt
 from tinytag import TinyTag
@@ -76,17 +48,20 @@ def main(argv):
     input_dir, output_dir, filename = None, None, None
     verbose, move, copy_or_move_used, use_file, use_nuke, auto_yes, use_over, use_filename = False, True, False, False, False, False, False, False
     try:
-        opts, args = getopt.getopt(argv, "cmthyvf:n:i:o:", ["yes", "help", "copy", "move", "verbose", "file=", "nuke", "thwomp", "overwrite", "filename=", "input=", "output="])
+        opts, args = getopt.getopt(argv, "cmthyvf:n:i:o:", ["yes", "help", "legal", "copy", "move", "verbose", "file=", "nuke", "thwomp", "overwrite", "filename=", "input=", "output="])
     except getopt.GetoptError:
         print('Invalid syntax. Use -h or --help')
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            print('Audiosort is a command line utility to sort your music library\n\nMinimum usage of audiosort:\naudiosort -i [unsorted library path] -o [output path]\n\nIf one of the tags contains an illegal character for your OS it will be replaced by a "#"\n\nOptions:\n\t-c or --copy:\n\t\tCopies the files from [input] to [output]\n\t-d or --date:\n\t\tCreate and sort by date\n\t-f or --file\n\t\tTake care of non-audio files\n\t-g or --genre:\n\t\tCreate and sort by genre\n\t-h or --help:\n\t\tShows this message\n\t-i or --input:\n\t\tNeeds a path !\n\t\tIndicates the root directory of the audio library to sort\n\t-m or --move:\n\t\tUsed by default\n\t\tMoves the file from [input] to [output]\n\t-n or --nuke:\n\t\tRemoves the input directory after sorting it\n\t-t or --overwrite or --thwomp:\n\t\tIf a file exist already then it\'s overwritten\n\t-o or --output:\n\t\tNeeds a path !\n\t\tIndicates the root directory of the audio library output\n\t-v or --verbose:\n\t\tShows information for everything the program does\n\t-y or --yes:\n\t\tAutomatically respond yes to any query')
+            print('Audiosort is a command line utility to sort your music library\n\nMinimum usage of audiosort:\naudiosort -i [unsorted library path] -o [output path]\n\nIf one of the tags contains an illegal character for your OS it will be replaced by a "#"\n\nPatterns can be used in the output path and filename like so:\n%{tag}\n\nUsable tags:\n\talbum\n\talbumartist, artist, realartist (use artist rather than realartist)\n\taudio_offset\n\tbitrate\n\tcomment\n\tcomposer\n\tdisc\n\tdisc_total\n\tduration\n\tfilesize\n\tgenre\n\tsamplerate\n\ttitle\n\ttrack\n\ttrack_total\n\tyear\n\nOptions:\n\t-c or --copy:\n\t\tCopies the files from [input] to [output]\n\t-f or --file\n\t\tNeeds a path !\n\t\tTake care of unsuported files\n\t-h or --help:\n\t\tShows this message\n\t-i or --input:\n\t\tNeeds a path !\n\t\tIndicates the root directory of the audio library to sort\n\t--legal:\n\t\tShows the license of the program\n\t-m or --move:\n\t\tUsed by default\n\t\tMoves the file from [input] to [output]\n\t-n or --filename:\n\t\tNeeds a filename pattern (with tags)\n\t\tRenames the sorted files to the pattern\n\t--nuke:\n\t\tRemoves the input directory after sorting it\n\t-t or --overwrite or --thwomp:\n\t\tIf a file exist already then it\'s overwritten\n\t-o or --output:\n\t\tNeeds a path !\n\t\tIndicates the directory of the audio library output\n\t-v or --verbose:\n\t\tShows information for everything the program does\n\t-y or --yes:\n\t\tAutomatically respond yes to any query')
             sys.exit(0)
         elif opt in ('-v', '--verbose'):
             verbose = True
             print('Using -v or --verbose')
+        elif (opt == '--legal'):
+            print(legal)
+            sys.exit(0)
         elif opt in ('-y', '--yes'):
             auto_yes = True
             print('Using -y or --yes')
@@ -247,6 +222,31 @@ def main(argv):
             print('Nuked the input directory')
     sys.exit(0)
 
+legal = """audiosort - an audio-library sorter
+Copyright (c) 2019 Docx
+
+Sources on github:
+https://github.com/DocxDocxDocx/audiosort
+
+MIT License
+Copyright (c) 2019 Docx
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE."""
 
 if __name__ == "__main__":
     main(sys.argv[1:])
