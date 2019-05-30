@@ -36,21 +36,21 @@ Options:
 		Copies the files from [input] to [output]
 	-f or --file
 		Needs a path !
-        Take care of unsuported files
+        	Take care of unsuported files
 	-h or --help:
 		Shows this message
 	-i or --input:
 		Needs a path !
 		Indicates the root directory of the audio library to sort
-    --legal:
-        Shows the license of the program
+    	--legal:
+		Shows the license of the program
 	-m or --move:
 		Used by default
 		Moves the file from [input] to [output]
 	-n or --filename:
-        Needs a filename pattern (with tags)
-        Renames the sorted files to the pattern
-    --nuke:
+        	Needs a filename pattern (with tags)
+        	Renames the sorted files to the pattern
+    	--nuke:
 		Removes the input directory after sorting it
 	-t or --overwrite or --thwomp:
 		If a file exist already then it's overwritten
